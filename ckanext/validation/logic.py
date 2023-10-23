@@ -88,6 +88,10 @@ def resource_validation_run(context, data_dict):
     resource = t.get_action(u'resource_show')(
         {}, {u'id': data_dict[u'resource_id']})
 
+    # Append CKAN UI dict to resource if it has been passed in
+    if 'ui_dict' in data_dict and len(data_dict['ui_dict']) > 0:
+        resource['ui_dict'] = data_dict['ui_dict']
+
     # TODO: limit to sysadmins
     async_job = data_dict.get(u'async', True)
 

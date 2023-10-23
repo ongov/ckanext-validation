@@ -76,14 +76,19 @@ def run_validation_job(resource):
 
     if not source:
         source = resource['url']
-
-    schema = resource.get('schema')
-    if schema:
-        if isinstance(schema, str):
-            if schema.startswith('http'):
-                r = requests.get(schema)
-                schema = r.json()
-            schema = json.loads(schema)
+    
+    # If the CKAN UI dict has been passed in, assign it to schema
+    if 'ui_dict' in resource and len(resource['ui_dict']) > 0:
+        schema = resource.get('ui_dict')
+    else:
+        schema = resource.get('schema')
+    # schema = resource.get('schema')
+    # if schema:
+    #     if isinstance(schema, str):
+    #         if schema.startswith('http'):
+    #             r = requests.get(schema)
+    #             schema = r.json()
+    #         schema = json.loads(schema)
 
     _format = resource['format'].lower()
     report = _validate_table(source, _format=_format, schema=schema, **options)
