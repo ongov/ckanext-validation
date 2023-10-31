@@ -649,8 +649,11 @@ def resource_update(up_func, context, data_dict):
 def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
 
     try:
-        # Get the CKAN UI dict
-        ui_dict = get_datastore_info(resource_id)
+        if new_resource == True:
+            ui_dict = []
+        else:
+            # Get the CKAN UI dict
+            ui_dict = get_datastore_info(resource_id)
 
         t.get_action(u'resource_validation_run')(
             {u'ignore_auth': True},
@@ -699,13 +702,14 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
 
 ## CUSTOM EDITS
 def get_datastore_info(resource_id):
-    ''' Gets the CKAN UI data dictionary array and returns
-     it in the format used by ckanext-validation with
-     data types conforming to Frictionless Data.
+    ''' Gets the CKAN UI data dictionary array of
+    an existing resource and returns it in the format
+    used by ckanext-validation with data types
+    conforming to Frictionless Data.
 
-     '''
+    '''
     info=t.get_action('datastore_search')(
-                data_dict={'id': resource_id})
+            data_dict={'id': resource_id})
 
     return reformat_ui_dict(info['fields'])
 
