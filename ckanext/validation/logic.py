@@ -649,10 +649,15 @@ def resource_update(up_func, context, data_dict):
 def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
 
     try:
+        # Get the CKAN UI dict
+        ui_dict = get_datastore_info(resource_id)
+
         t.get_action(u'resource_validation_run')(
             {u'ignore_auth': True},
             {u'resource_id': resource_id,
-             u'async': False})
+             u'async': False,
+             u'ui_dict': ui_dict
+             })
     except t.ValidationError as e:
         log.info(
             u'Could not run validation for resource %s: %s',
@@ -691,3 +696,47 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
         raise t.ValidationError({
             'validation': []
         })
+
+## CUSTOM EDITS
+def get_datastore_info(resource_id):
+    ''' Gets the CKAN UI data dictionary array and returns
+     it in the format used by ckanext-validation with
+     data types conforming to Frictionless Data.
+
+     '''
+    info=t.get_action('datastore_search')(
+                data_dict={'id': resource_id})
+
+    return reformat_ui_dict(info['fields'])
+
+def reformat_ui_dict(raw_dict_array):
+    ''' Reformats the dictionary array from the CKAN UI form
+    into the structure used by ckanext-validation. Also
+    replaces PostgreSQL data types with their Fricionless
+    Data equivalents.
+
+    :param raw_dict_array: the array containing the dictionary array
+                           as saved in the UI form
+
+    '''
+
+    schema_obj = {}
+    reformatArray = []
+    for el in raw_dict_array:
+        if el['id'] != "_id":
+            if 'info' in el:
+                if el['info']['type_override']:
+                    el['type'] = el['info']['type_override']
+                del el['info']
+
+            # Switch 'id' key name to 'name'
+            el['name'] = el['id']
+            del el['id']
+            # PostgreSQL type text is string in Frictionless
+            if el['type'] == 'text':
+                el['type'] = 'string'
+            reformatArray.append(el)
+    schema_obj['fields'] = reformatArray
+
+    return schema_obj
+## END CUSTOM EDITS
