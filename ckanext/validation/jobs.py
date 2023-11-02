@@ -7,7 +7,7 @@ import re
 
 import requests
 from sqlalchemy.orm.exc import NoResultFound
-from frictionless import validate, system, Report, Schema, Dialect, Check
+from frictionless import validate, system, Report, Schema, Dialect, Check, errors
 
 from ckan.model import Session
 import ckan.lib.uploader as uploader
@@ -40,12 +40,17 @@ def run_validation_job(resource):
 
     options = t.config.get(
         'ckanext.validation.default_validation_options')
+    print('HEJ jobs py options: ', options)
+    #options = {"checks": [header_rule_2_4_underscore()]}
+    #
     if options:
         options = json.loads(options)
     else:
         options = {}
+    print('HEJ jobs py options after json loads: ', options)
 
     resource_options = resource.get('validation_options')
+    print('HEJ jobs py resource_options: ', resource_options)
     if resource_options and isinstance(resource_options, str):
         resource_options = json.loads(resource_options)
     if resource_options:
@@ -167,7 +172,9 @@ def _validate_table(source, _format='csv', schema=None, **options):
         options['checks'] = checklist
 
     with system.use_context(**frictionless_context):
-        report = validate(source, format=_format, schema=resource_schema, **options)
+        #report = validate(source, format=_format, schema=resource_schema, **options)
+        # FOR TESTING ONLY!!!
+        report = validate(source, format=_format, schema=resource_schema, checks=[header_rule_2_4_underscore()])
         log.debug('Validating source: %s', source)
 
     return report
@@ -179,3 +186,14 @@ def _get_site_user_api_key():
     site_user = t.get_action('get_site_user')(
         {'ignore_auth': True}, {'id': site_user_name})
     return site_user['apikey']
+
+# Custom checks
+class header_rule_2_4_underscore(Check):
+    Errors = [errors.CellError]
+    def validate_row(self, row):
+        print('HEJ jobs py row: ', row)
+        for header in list(row):
+            if header[0]=='_':
+                note = 'Column header cannot begin with an underscore'
+                print('HEJ jobs py violaion found!: ', note)
+                yield errors.CellError.from_row(row, note=note, field_name=header)
