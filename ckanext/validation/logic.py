@@ -685,6 +685,17 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
             if local_upload:
                 delete_local_uploaded_file(resource_id)
 
+            if new_resource:
+                try:
+                    # Delete resource
+                    t.get_action(u'resource_delete')(
+                        {u'ignore_auth': True, 'user': None},
+                        {u'id': resource_id}
+                    )
+                except NoResultFound:
+                    raise t.ObjectNotFound(
+                    'This resource does not exist in the datastore')
+
             raise t.ValidationError({
                 u'validation': [report]})
     else:
