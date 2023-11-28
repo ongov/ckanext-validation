@@ -40,17 +40,14 @@ def run_validation_job(resource):
 
     options = t.config.get(
         'ckanext.validation.default_validation_options')
-    print('HEJ jobs py options: ', options)
     #options = {"checks": [header_rule_2_4_underscore()]}
     #
     if options:
         options = json.loads(options)
     else:
         options = {}
-    print('HEJ jobs py options after json loads: ', options)
 
     resource_options = resource.get('validation_options')
-    print('HEJ jobs py resource_options: ', resource_options)
     if resource_options and isinstance(resource_options, str):
         resource_options = json.loads(resource_options)
     if resource_options:
@@ -176,9 +173,8 @@ def _validate_table(source, _format='csv', schema=None, **options):
         # FOR TESTING ONLY!!!
         report = validate(source, 
                           format=_format, 
-                          schema=resource_schema, 
-                          checks=[header_rule_2_3_snake_case(),
-                                  header_rule_2_4_underscore()])
+                          schema=resource_schema,
+                        checks=[header_rule_2_4_underscore()])
         log.debug('Validating source: %s', source)
 
     return report
@@ -191,30 +187,27 @@ def _get_site_user_api_key():
         {'ignore_auth': True}, {'id': site_user_name})
     return site_user['apikey']
 
-# Custom checks
-class header_rule_2_3_snake_case(Check):
-    ''' Column headers must be in snake case. 
-    Requirements to satisfy snake_case:
-       * it's composed only by lowercase letters ([a-z]), underscores 
-         and optionally numbers ([0-9])
-       * it does not start/end with an underscore (or provided separator)
-       * it does not start with a number
-    '''
-    Errors = [errors.CellError]
-    def validate_row(self, row):
-        print('HEJ jobs py row in rule 2 3: ', row)
-        for header in list(row):
-            if bool(re.search(r"\s", header)):
-                note = 'Column headers cannot contain spaces, they must follow snake_case pattern.'
-                print('HEJ jobs py violaion found rule 2 3!: ', note)
-                yield errors.CellError.from_row(row, note=note, field_name=header)
 
+# WORKS AS A CellError using custom class in frictionless errors/cell.py
+# class header_rule_2_4_underscore(Check):
+#     Errors = [errors.ForbiddenHeaderError]
+#     def validate_row(self, row):
+#         for header in list(row):
+#             if header[0]=='_':
+#                 note = 'Column header cannot begin with an underscore.'
+#                 yield errors.ForbiddenHeaderError.from_row(row, note=note, field_name=header)
+
+# Define custom LabelError checks for header rules.
+# Uses custom class ForbiddenLabelError in frictionless errors/label.py
 class header_rule_2_4_underscore(Check):
-    Errors = [errors.CellError]
+    Errors = [errors.ForbiddenLabelError]
     def validate_row(self, row):
-        print('HEJ jobs py row in rule 2 4: ', row)
-        for header in list(row):
+        for field_number, header in enumerate(list(row)):
             if header[0]=='_':
-                note = 'Column header cannot begin with an underscore.'
-                print('HEJ jobs py violaion found rule 2 4!: ', note)
-                yield errors.CellError.from_row(row, note=note, field_name=header)
+                note = 'Column name cannot begin with an underscore.'
+                yield errors.ForbiddenLabelError(note=note, 
+                                                row_numbers=list(range(1,len(list(row))+1)),
+                                                label=header,
+                                                labels=list(row),
+                                                field_number=field_number+1,
+                                                field_name=header)
