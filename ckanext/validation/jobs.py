@@ -172,7 +172,8 @@ def _validate_table(source, _format='csv', schema=None, **options):
         report = validate(source, 
                           format=_format, 
                           schema=resource_schema,
-                          checks=[header_rule_2_3_snake_case(),
+                          checks=[header_rule_2_2_header_length(),
+                                  header_rule_2_3_snake_case(),
                                   header_rule_2_4_underscore()])
         log.debug('Validating source: %s', source)
 
@@ -198,6 +199,22 @@ def _get_site_user_api_key():
 
 # Define custom LabelError checks for header rules.
 # Uses custom class ForbiddenLabelError in frictionless errors/label.py
+class header_rule_2_2_header_length(Check):
+    ''' 
+    Column headers must be less than 63 characters long (PostgreSQL limit). 
+    '''
+    Errors = [errors.ForbiddenLabelError]
+    def validate_row(self, row):
+        note = 'Column name must be less than 63 characters long.'
+        for field_number, header in enumerate(list(row)):
+            if len(header) > 63:
+                yield errors.ForbiddenLabelError(note=note, 
+                                                row_numbers=list(range(1,len(list(row))+1)),
+                                                label=header,
+                                                labels=list(row),
+                                                field_number=field_number+1,
+                                                field_name=header)
+
 class header_rule_2_3_snake_case(Check):
     ''' 
     Column headers must be in snake case. 
