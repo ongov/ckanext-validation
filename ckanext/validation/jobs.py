@@ -40,8 +40,6 @@ def run_validation_job(resource):
 
     options = t.config.get(
         'ckanext.validation.default_validation_options')
-    #options = {"checks": [header_rule_2_4_underscore()]}
-    #
     if options:
         options = json.loads(options)
     else:
@@ -174,7 +172,8 @@ def _validate_table(source, _format='csv', schema=None, **options):
         report = validate(source, 
                           format=_format, 
                           schema=resource_schema,
-                        checks=[header_rule_2_4_underscore()])
+                          checks=[header_rule_2_3_snake_case(),
+                                  header_rule_2_4_underscore()])
         log.debug('Validating source: %s', source)
 
     return report
@@ -199,7 +198,38 @@ def _get_site_user_api_key():
 
 # Define custom LabelError checks for header rules.
 # Uses custom class ForbiddenLabelError in frictionless errors/label.py
+class header_rule_2_3_snake_case(Check):
+    ''' 
+    Column headers must be in snake case. 
+    Requirements to satisfy snake_case:
+        * header name composed only by lowercase letters ([a-z])
+        * multiple words separated by underscore
+    '''
+    Errors = [errors.ForbiddenLabelError]
+    def validate_row(self, row):
+        note = 'Column name must be in snake_case: use lower case only and replace any space separators with underscore.'
+        for field_number, header in enumerate(list(row)):
+            is_valid = []
+            if bool(re.search(r"\s", header)):
+                is_valid.append(False)
+            
+            else:
+                for el in header:
+                    if el.isupper():
+                        is_valid.append(False)
+
+            if len(list(filter(lambda x: (x == False), is_valid))) > 0:    
+                yield errors.ForbiddenLabelError(note=note, 
+                                                row_numbers=list(range(1,len(list(row))+1)),
+                                                label=header,
+                                                labels=list(row),
+                                                field_number=field_number+1,
+                                                field_name=header)
+
 class header_rule_2_4_underscore(Check):
+    ''' 
+    Column headers must not begin with an underscore. 
+    '''
     Errors = [errors.ForbiddenLabelError]
     def validate_row(self, row):
         for field_number, header in enumerate(list(row)):
@@ -211,3 +241,4 @@ class header_rule_2_4_underscore(Check):
                                                 labels=list(row),
                                                 field_number=field_number+1,
                                                 field_name=header)
+
