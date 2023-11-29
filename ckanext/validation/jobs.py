@@ -245,13 +245,13 @@ class header_rule_2_3_snake_case(Check):
 
 class header_rule_2_4_underscore(Check):
     ''' 
-    Column headers must not begin with an underscore. 
+    Column headers must begin with an alphabetic letter. 
     '''
     Errors = [errors.ForbiddenLabelError]
     def validate_row(self, row):
         for field_number, header in enumerate(list(row)):
-            if header[0]=='_':
-                note = 'Column name cannot begin with an underscore.'
+            if not header[0].isalpha():
+                note = 'Column name must begin with an alphabetic letter.'
                 yield errors.ForbiddenLabelError(note=note, 
                                                 row_numbers=list(range(1,len(list(row))+1)),
                                                 label=header,
