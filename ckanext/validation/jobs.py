@@ -174,7 +174,8 @@ def _validate_table(source, _format='csv', schema=None, **options):
                           schema=resource_schema,
                           checks=[header_rule_2_2_header_length(),
                                   header_rule_2_3_snake_case(),
-                                  header_rule_2_4_underscore()])
+                                  header_rule_2_4_underscore(),
+                                  data_entry_rule_2_6_bullet_lists()])
         log.debug('Validating source: %s', source)
 
     return report
@@ -259,3 +260,19 @@ class header_rule_2_4_underscore(Check):
                                                 field_number=field_number+1,
                                                 field_name=header)
 
+# Data entry rules
+class data_entry_rule_2_6_bullet_lists(Check):
+    ''' 
+    Cell value cannot contain a bullet list. 
+    '''
+    Errors = [errors.ForbiddenValueError]
+    def validate_row(self, row):
+        for header in list(row):
+            this_cell = row[header]
+            list_chars = [u'•', u'*', u'- ', u'â€”', u'\n',  u'\t'] # u'â€”' is em-dash
+            bullet_check = [ele for ele in list_chars if(ele in this_cell)]
+            if len(bullet_check) > 0:
+                note = 'Cell value cannot contain bullets, dashes, new line or tab characters. Please make separate rows.'
+                yield errors.ForbiddenValueError.from_row(row, 
+                                                        note=note,
+                                                        field_name=header)
