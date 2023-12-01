@@ -3,11 +3,15 @@
 import logging
 import datetime
 import json
-import re
 
 import requests
 from sqlalchemy.orm.exc import NoResultFound
 from frictionless import validate, system, Report, Schema, Dialect, Check, errors
+from ckanext.validation.ontario_data_standards.header_rule_2_2_header_length import header_rule_2_2_header_length
+from ckanext.validation.ontario_data_standards.header_rule_2_3_snake_case import header_rule_2_3_snake_case
+from ckanext.validation.ontario_data_standards.header_rule_2_4_first_char import header_rule_2_4_first_char
+from ckanext.validation.ontario_data_standards.data_entry_rule_2_6_bullet_lists import data_entry_rule_2_6_bullet_lists
+#from frictionless.errors.table import TableError
 
 from ckan.model import Session
 import ckan.lib.uploader as uploader
@@ -187,94 +191,3 @@ def _get_site_user_api_key():
     site_user = t.get_action('get_site_user')(
         {'ignore_auth': True}, {'id': site_user_name})
     return site_user['apikey']
-
-
-# WORKS AS A CellError using custom class in frictionless errors/cell.py
-# class header_rule_2_4_underscore(Check):
-#     Errors = [errors.ForbiddenHeaderError]
-#     def validate_row(self, row):
-#         for header in list(row):
-#             if header[0]=='_':
-#                 note = 'Column header cannot begin with an underscore.'
-#                 yield errors.ForbiddenHeaderError.from_row(row, note=note, field_name=header)
-
-# Define custom LabelError checks for header rules.
-# Uses custom class ForbiddenLabelError in frictionless errors/label.py
-class header_rule_2_2_header_length(Check):
-    ''' 
-    Column headers must be less than 63 characters long (PostgreSQL limit). 
-    '''
-    Errors = [errors.ForbiddenLabelError]
-    def validate_row(self, row):
-        note = 'Column name must be less than 63 characters long.'
-        for field_number, header in enumerate(list(row)):
-            if len(header) > 63:
-                yield errors.ForbiddenLabelError(note=note, 
-                                                row_numbers=list(range(1,len(list(row))+1)),
-                                                label=header,
-                                                labels=list(row),
-                                                field_number=field_number+1,
-                                                field_name=header)
-
-class header_rule_2_3_snake_case(Check):
-    ''' 
-    Column headers must be in snake case. 
-    Requirements to satisfy snake_case:
-        * header name composed only by lowercase letters ([a-z])
-        * multiple words separated by underscore
-    '''
-    Errors = [errors.ForbiddenLabelError]
-    def validate_row(self, row):
-        note = 'Column name must be in snake_case: use lower case only and replace any space separators with underscore.'
-        for field_number, header in enumerate(list(row)):
-            is_valid = []
-            if bool(re.search(r"\s", header)):
-                is_valid.append(False)
-            
-            else:
-                for el in header:
-                    if el.isupper():
-                        is_valid.append(False)
-
-            if len(list(filter(lambda x: (x == False), is_valid))) > 0:    
-                yield errors.ForbiddenLabelError(note=note, 
-                                                row_numbers=list(range(1,len(list(row))+1)),
-                                                label=header,
-                                                labels=list(row),
-                                                field_number=field_number+1,
-                                                field_name=header)
-
-class header_rule_2_4_first_char(Check):
-    ''' 
-    Column headers must begin with an alphabetic letter. 
-    '''
-    Errors = [errors.ForbiddenLabelError]
-    def validate_row(self, row):
-        for field_number, header in enumerate(list(row)):
-            if not header[0].isalpha():
-                note = 'Column name must begin with an alphabetic letter.'
-                yield errors.ForbiddenLabelError(note=note, 
-                                                row_numbers=list(range(1,len(list(row))+1)),
-                                                label=header,
-                                                labels=list(row),
-                                                field_number=field_number+1,
-                                                field_name=header)
-
-# Data entry rules
-class data_entry_rule_2_6_bullet_lists(Check):
-    ''' 
-    Cell value cannot contain a bullet list.
-    Skip check for non-string cells.
-    '''
-    Errors = [errors.ForbiddenValueError]
-    def validate_row(self, row):
-        for header in list(row):
-            this_cell = row[header]
-            if isinstance(this_cell, str):
-                list_chars = [u'•', u'* ', u'- ', u'â€”', u'\n',  u'\t'] # u'â€”' is em-dash
-                bullet_check = [ele for ele in list_chars if(ele in this_cell.rstrip())] # strip any trailing spaces
-                if len(bullet_check) > 0:
-                    note = 'Cell value cannot contain bullets, dashes, new line or tab characters. Please make separate rows.'
-                    yield errors.ForbiddenValueError.from_row(row, 
-                                                            note=note,
-                                                            field_name=header)
