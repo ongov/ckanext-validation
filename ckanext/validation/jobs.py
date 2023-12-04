@@ -11,6 +11,7 @@ from ckanext.validation.ontario_data_standards.header_rule_2_2_header_length imp
 from ckanext.validation.ontario_data_standards.header_rule_2_3_snake_case import header_rule_2_3_snake_case
 from ckanext.validation.ontario_data_standards.header_rule_2_4_first_char import header_rule_2_4_first_char
 from ckanext.validation.ontario_data_standards.data_entry_rule_2_6_bullet_lists import data_entry_rule_2_6_bullet_lists
+from ckanext.validation.ontario_data_standards.data_entry_rule_4_7_bare_numbers import data_entry_rule_4_7_bare_numbers
 #from frictionless.errors.table import TableError
 
 from ckan.model import Session
@@ -179,7 +180,9 @@ def _validate_table(source, _format='csv', schema=None, **options):
                           checks=[header_rule_2_2_header_length(),
                                   header_rule_2_3_snake_case(),
                                   header_rule_2_4_first_char(),
-                                  data_entry_rule_2_6_bullet_lists()])
+                                  data_entry_rule_2_6_bullet_lists(),
+                                  data_entry_rule_4_7_bare_numbers()
+                                 ])
         log.debug('Validating source: %s', source)
 
     return report
