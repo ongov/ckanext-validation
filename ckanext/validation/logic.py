@@ -652,7 +652,7 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
         if new_resource == True:
             ui_dict = []
         else:
-            # Get the CKAN UI dict
+            # Get the CKAN UI dict containing Frictionless data types
             ui_dict = get_datastore_info(resource_id)
 
         t.get_action(u'resource_validation_run')(
@@ -713,37 +713,22 @@ def get_datastore_info(resource_id):
     '''
     info=t.get_action('datastore_search')(
             data_dict={'id': resource_id})
-
-    return reformat_ui_dict(info['fields'])
-
-def reformat_ui_dict(raw_dict_array):
-    ''' Reformats the dictionary array from the CKAN UI form
-    into the structure used by ckanext-validation. Also
-    replaces PostgreSQL data types with their Fricionless
-    Data equivalents.
-
-    :param raw_dict_array: the array containing the dictionary array
-                           as saved in the UI form
-
-    '''
+    
+    raw_dict = info['fields']
 
     schema_obj = {}
-    reformatArray = []
-    for el in raw_dict_array:
-        if el['id'] != "_id":
-            if 'info' in el:
-                if el['info']['type_override']:
-                    el['type'] = el['info']['type_override']
-                del el['info']
-
-            # Switch 'id' key name to 'name'
+    new_fields = []
+    for el in raw_dict:
+        if el['id'] == '_id':
+            el['type'] = 'integer' # for some reason, the _id type is "int"
+        else:
             el['name'] = el['id']
             del el['id']
-            # PostgreSQL type text is string in Frictionless
-            if el['type'] == 'text':
-                el['type'] = 'string'
-            reformatArray.append(el)
-    schema_obj['fields'] = reformatArray
+            if 'info' in el:
+                el['type'] = el['info']['frictionless_type']
+                del el['info']
+            new_fields.append(el)
+    schema_obj['fields'] = new_fields
 
     return schema_obj
 ## END CUSTOM EDITS
