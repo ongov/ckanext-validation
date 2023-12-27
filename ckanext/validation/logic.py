@@ -692,7 +692,7 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
                         {u'ignore_auth': True, 'user': None},
                         {u'id': resource_id}
                     )
-                except NoResultFound:
+                except Exception:
                     raise t.ObjectNotFound(
                     'This resource does not exist in the datastore')
 
@@ -706,9 +706,16 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
 ## CUSTOM EDITS
 def get_datastore_info(resource_id):
     ''' Gets the CKAN UI data dictionary array of
-    an existing resource and returns it in the format
-    used by ckanext-validation with data types
-    conforming to Frictionless Data.
+    an existing resource if it has been submitted,
+    and returns it in the format used by ckanext-validation
+    with data types conforming to Frictionless Data.
+
+    In the case of existing resources that get updated with a 
+    new file but that do not have a CKAN UI dictionary (i.e. 
+    all columns are type text and do not require the user to 
+    override the types via the CKAN UI dictionary), this function 
+    will swap "text" with the Frictionless "string" so that the 
+    validation will not fail.
 
     '''
     info=t.get_action('datastore_search')(
@@ -727,6 +734,9 @@ def get_datastore_info(resource_id):
             if 'info' in el:
                 el['type'] = el['info']['frictionless_type']
                 del el['info']
+            else: # UI Dictionary form has not been submitted therefore datastore_search has no attached dict
+                if el['type'] == 'text':
+                    el['type'] = 'string'
             new_fields.append(el)
     schema_obj['fields'] = new_fields
 
