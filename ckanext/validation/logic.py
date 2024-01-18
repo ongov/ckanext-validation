@@ -707,8 +707,8 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
 def get_datastore_info(resource_id):
     ''' Gets the CKAN UI data dictionary array of
     an existing resource if it has been submitted,
-    and returns it in the format used by ckanext-validation
-    with data types conforming to Frictionless Data.
+    and fetches the Frictionless dictionary previously
+    stored on the columns.
 
     In the case of existing resources that get updated with a 
     new file but that do not have a CKAN UI dictionary (i.e. 
@@ -725,19 +725,22 @@ def get_datastore_info(resource_id):
 
     schema_obj = {}
     new_fields = []
+
     for el in raw_dict:
-        if el['id'] == '_id':
-            el['type'] = 'integer' # for some reason, the _id type is "int"
-        else:
-            el['name'] = el['id']
-            del el['id']
+        if el['id'] != '_id':
             if 'info' in el:
-                el['type'] = el['info']['frictionless_type']
-                del el['info']
-            else: # UI Dictionary form has not been submitted therefore datastore_search has no attached dict
+                this_el = el['info']['frictionless_dict'][0]
+                new_fields.append(this_el)
+            # UI Dictionary form has not been 
+            # submitted therefore datastore_search
+            # has no attached dict
+            else: 
+                el['name'] = el['id']
+                del el['id']
                 if el['type'] == 'text':
                     el['type'] = 'string'
-            new_fields.append(el)
+                    new_fields.append(el)
+
     schema_obj['fields'] = new_fields
 
     return schema_obj
