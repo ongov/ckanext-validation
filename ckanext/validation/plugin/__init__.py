@@ -24,7 +24,7 @@ from ckanext.validation.helpers import (
     dump_json_value,
     bootstrap_version,
     validation_dict,
-    use_webassets,
+    use_webassets
 )
 from ckanext.validation.validators import (
     resource_schema_validator,
@@ -112,7 +112,7 @@ to create the database tables:
             u'dump_json_value': dump_json_value,
             u'bootstrap_version': bootstrap_version,
             u'validation_dict': validation_dict,
-            u'use_webassets': use_webassets,
+            u'use_webassets': use_webassets
         }
 
     # IResourceController
