@@ -23,8 +23,7 @@
         {{ h.get_validation_badge(resource)|safe }}
         </h1>
 
-        <div class="validation-details">
-          <p>resource: {{resource}}</p>
+        <div class="validation-details">          
             <div>{{ _('Validation timestamp') }}: {{ h.render_datetime(resource.validation_timestamp, with_hours=True) }}</div>
             {% if validation.report %}
             <div>{{ _('Duration') }}: {{ h.validation_dict(validation.report)["stats"]["seconds"] }}s</div>
@@ -37,6 +36,9 @@
 
       </div>
 
+      <br></br>
+      <br></br>
+      <br></br>
       {% set package_id = resource.get('package_id') %}
       {% set resource_id = resource.get('id') %}
       {% if resource.validation_status == 'success' %}
@@ -49,13 +51,17 @@
           {% set action = h.url_for('resource.read', id=package_id, resource_id=resource.id) %}
           {% set btn_text = 'Publish dataset resource' %}
         {% endif %}
+        <form method="get" action="{{ action }}" >
+          <button class="btn btn-primary" name="save" type="submit">
+            {{ btn_text }}
+          </button>
+        </form>
+      {% elif resource.validation_status == 'failure' %}
+      <h3>TODO: Add Back Button (via Step indicator)</h3>
       {% endif %}
 
-      <form method="get" action="{{ action }}" >
-        <button class="btn btn-primary" name="save" type="submit">
-          {{ btn_text }}
-        </button>
-      </form>
+
+      
 
     </section>
 {% if h.use_webassets() %}
