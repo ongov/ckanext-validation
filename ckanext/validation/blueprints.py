@@ -4,10 +4,15 @@ from flask import Blueprint
 
 from ckantoolkit import c, NotAuthorized, ObjectNotFound, abort, _, render, get_action
 
+from ckan.plugins import toolkit
+import ckan.plugins as p
+import time
+
 validation = Blueprint("validation", __name__)
 
 
 def read(id, resource_id):
+    print('HEI in ckanext validation blueprint py def read')
 
     try:
         validation = get_action(u"resource_validation_show")(
@@ -23,6 +28,29 @@ def read(id, resource_id):
         # Needed for core resource templates
         c.package = c.pkg_dict = dataset
         c.resource = resource
+
+        # # TEST XLOADER HOOK !!!
+        # print('HEI in ckanext validation views py')  
+        # callback_url = toolkit.url_for(
+        #     "api.action", ver=3, logic_function="xloader_hook", qualified=True
+        # )
+        # input = {
+        #     'result_url': callback_url,
+        #     'metadata': {'resource_id': resource_id}
+        # }
+        # job_dict = dict(metadata=input['metadata'],
+        #             status='running')
+
+        # callback_xloader_hook(result_url=input['result_url'],
+        #                      api_key=None,                   
+        #                   job_dict=job_dict)
+
+
+        # print('HEI in ckanext validation views py calling after_upload')  
+        # for plugin in p.PluginImplementations(xloader_interfaces.IXloader):
+        #     plugin.after_upload(resource, dataset)
+       
+        print('HEI in ckanext validation blueprints py')  
 
         return render(
             u"validation/validation_read.html",

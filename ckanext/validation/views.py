@@ -10,6 +10,7 @@ validation = Blueprint("service_proxy", __name__)
 
 
 def validation_read(self, id, resource_id):
+    print('HEI in ckanext validation views py def validation_read')  
 
     try:
         validation = get_action(u'resource_validation_show')(
