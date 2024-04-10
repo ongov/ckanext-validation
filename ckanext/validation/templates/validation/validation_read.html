@@ -1,4 +1,4 @@
-{% extends "package/base.html" %}
+{% extends "package/resource_edit_base.html" %}
 
 
 {%- block subtitle %}{{ _('Validation Report') }}{% endblock -%}
@@ -7,13 +7,13 @@
 {% block breadcrumb_content %}
   {{ super() }}
 
-  <li><a href="{{ h.url_for('resource.read', id=dataset.id, resource_id=resource.id ) }}">{{ h.resource_display_name(resource)|truncate(30) }}</a></li>
-  <li class="active"><a href="">Validation Report</a></li>
 {% endblock %}
 
 {% block pre_primary %}
+  {% set back_url = h.url_for(dataset.type ~ '_resource.edit', id=dataset.id, resource_id=resource.id) %}
+  {% snippet "package/snippets/step_indicator.html", step=1.5, back_url=back_url %}
 
-    <section class="module module-validation">
+    <section class="ontario-column ontario-small-12 module module-validation">
       <div class="module-content">
         <div class="actions">
 
@@ -42,15 +42,13 @@
       {% set package_id = resource.get('package_id') %}
       {% set resource_id = resource.get('id') %}
       {% if resource.validation_status == 'success' %}
-        {% if not resource.datastore_active %}
-          {% set action = h.url_for('datastore.dictionary',
+        {% set btn_text = 'Next' %}
+      <p>datastore_active {{resource.datastore_active}}</p>
+
+        {% set action = h.url_for('datastore.dictionary',
                   id=package_id,
                   resource_id=resource.id) %}
-          {% set btn_text = 'Next' %}
-        {% else %}
-          {% set action = h.url_for('resource.read', id=package_id, resource_id=resource.id) %}
-          {% set btn_text = 'Publish dataset resource' %}
-        {% endif %}
+        
         <form method="get" action="{{ action }}" >
           <button class="btn btn-primary" name="save" type="submit">
             {{ btn_text }}
