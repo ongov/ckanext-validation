@@ -3,11 +3,16 @@
 import logging
 import datetime
 import json
-import re
 
 import requests
 from sqlalchemy.orm.exc import NoResultFound
-from frictionless import validate, system, Report, Schema, Dialect, Check
+from frictionless import validate, system, Report, Schema, Dialect, Check, errors
+from ckanext.validation.ontario_data_standards.header_rule_2_2_header_length import header_rule_2_2_header_length
+from ckanext.validation.ontario_data_standards.header_rule_2_3_snake_case import header_rule_2_3_snake_case
+from ckanext.validation.ontario_data_standards.header_rule_2_4_first_char import header_rule_2_4_first_char
+from ckanext.validation.ontario_data_standards.data_entry_rule_2_6_bullet_lists import data_entry_rule_2_6_bullet_lists
+from ckanext.validation.ontario_data_standards.data_entry_rule_4_7_bare_numbers import data_entry_rule_4_7_bare_numbers
+#from frictionless.errors.table import TableError
 
 from ckan.model import Session
 import ckan.lib.uploader as uploader
@@ -76,14 +81,12 @@ def run_validation_job(resource):
 
     if not source:
         source = resource['url']
-
-    schema = resource.get('schema')
-    if schema:
-        if isinstance(schema, str):
-            if schema.startswith('http'):
-                r = requests.get(schema)
-                schema = r.json()
-            schema = json.loads(schema)
+    
+    # If the CKAN UI dict has been passed in, assign it to schema
+    if 'ui_dict' in resource and len(resource['ui_dict']) > 0:
+        schema = resource.get('ui_dict')
+    else:
+        schema = resource.get('schema')
 
     _format = resource['format'].lower()
     report = _validate_table(source, _format=_format, schema=schema, **options)
@@ -162,7 +165,15 @@ def _validate_table(source, _format='csv', schema=None, **options):
         options['checks'] = checklist
 
     with system.use_context(**frictionless_context):
-        report = validate(source, format=_format, schema=resource_schema, **options)
+        report = validate(source, 
+                          format=_format, 
+                          schema=resource_schema,
+                          checks=[header_rule_2_2_header_length(),
+                                  header_rule_2_3_snake_case(),
+                                  header_rule_2_4_first_char(),
+                                  data_entry_rule_2_6_bullet_lists(),
+                                  data_entry_rule_4_7_bare_numbers()
+                                 ])
         log.debug('Validating source: %s', source)
 
     return report

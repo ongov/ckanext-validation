@@ -88,6 +88,10 @@ def resource_validation_run(context, data_dict):
     resource = t.get_action(u'resource_show')(
         {}, {u'id': data_dict[u'resource_id']})
 
+    # Append CKAN UI dict to resource if it has been passed in
+    if 'ui_dict' in data_dict and len(data_dict['ui_dict']) > 0:
+        resource['ui_dict'] = data_dict['ui_dict']
+
     # TODO: limit to sysadmins
     async_job = data_dict.get(u'async', True)
 
@@ -645,10 +649,18 @@ def resource_update(up_func, context, data_dict):
 def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
 
     try:
+        if new_resource == True:
+            ui_dict = []
+        else:
+            # Get the CKAN UI dict containing Frictionless data types
+            ui_dict = get_datastore_info(resource_id)
+
         t.get_action(u'resource_validation_run')(
             {u'ignore_auth': True},
             {u'resource_id': resource_id,
-             u'async': False})
+             u'async': False,
+             u'ui_dict': ui_dict
+             })
     except t.ValidationError as e:
         log.info(
             u'Could not run validation for resource %s: %s',
@@ -663,7 +675,6 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
         report = json.loads(validation['report'])
 
         if not report['valid']:
-
             # Delete validation object
             t.get_action(u'resource_validation_delete')(
                 {u'ignore_auth': True},
@@ -675,11 +686,15 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
                 delete_local_uploaded_file(resource_id)
 
             if new_resource:
-                # Delete resource
-                t.get_action(u'resource_delete')(
-                    {u'ignore_auth': True, 'user': None},
-                    {u'id': resource_id}
-                )
+                try:
+                    # Delete resource
+                    t.get_action(u'resource_delete')(
+                        {u'ignore_auth': True, 'user': None},
+                        {u'id': resource_id}
+                    )
+                except Exception:
+                    raise t.ObjectNotFound(
+                    'This resource does not exist in the datastore')
 
             raise t.ValidationError({
                 u'validation': [report]})
@@ -687,3 +702,46 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
         raise t.ValidationError({
             'validation': []
         })
+
+## CUSTOM EDITS
+def get_datastore_info(resource_id):
+    ''' Gets the CKAN UI data dictionary array of
+    an existing resource if it has been submitted,
+    and fetches the Frictionless dictionary previously
+    stored on the columns.
+
+    In the case of existing resources that get updated with a 
+    new file but that do not have a CKAN UI dictionary (i.e. 
+    all columns are type text and do not require the user to 
+    override the types via the CKAN UI dictionary), this function 
+    will swap "text" with the Frictionless "string" so that the 
+    validation will not fail.
+
+    '''
+    info=t.get_action('datastore_search')(
+            data_dict={'id': resource_id})
+    
+    raw_dict = info['fields']
+
+    schema_obj = {}
+    new_fields = []
+
+    for el in raw_dict:
+        if el['id'] != '_id':
+            if 'info' in el:
+                this_el = el['info']['frictionless_dict'][0]
+                new_fields.append(this_el)
+            # UI Dictionary form has not been 
+            # submitted therefore datastore_search
+            # has no attached dict
+            else: 
+                el['name'] = el['id']
+                del el['id']
+                if el['type'] == 'text':
+                    el['type'] = 'string'
+                    new_fields.append(el)
+
+    schema_obj['fields'] = new_fields
+
+    return schema_obj
+## END CUSTOM EDITS
