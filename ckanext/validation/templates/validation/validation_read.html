@@ -31,7 +31,17 @@
         </div>
 
         {% if validation.report %}
-            <div id="report" {% if h.bootstrap_version() == '2' %}class="bs2"{% endif %} data-module="validation-report" data-module-report="{{ validation.report }}"></div>
+            <div class="ontario-alert ontario-alert--success">
+              <div class="ontario-alert__header">
+                  <div class="ontario-alert__header-icon">
+                      <svg class="ontario-icon" alt="" aria-hidden="true" focusable="false" sol:category="primary" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
+                          <use href="#ontario-icon-alert-success"></use>
+                      </svg>
+                  </div>
+                  <h2 class="ontario-alert__header-title ontario-h4">Data validated successfully</h2>
+              </div>
+          </div>
+          
         {% endif %}
 
       </div>
