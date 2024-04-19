@@ -6,13 +6,12 @@
 {% block breadcrumb_content_selected %}{% endblock %}
 {% block breadcrumb_content %}
   {{ super() }}
-
 {% endblock %}
 
 {% block pre_primary %}
+  {% asset "ontario_theme_scripts/ontario_theme_step_indicator" %}
   {% set back_url = h.url_for(dataset.type ~ '_resource.edit', id=dataset.id, resource_id=resource.id) %}
   {% snippet "package/snippets/step_indicator.html", step=2, back_url=back_url %}
-
     <section class="ontario-column ontario-small-12 module module-validation">
       <div class="module-content">
         <div class="actions">
