@@ -1,70 +1,58 @@
 {% extends "package/resource_edit_base.html" %}
 
-
 {%- block subtitle %}{{ _('Validation Report') }}{% endblock subtitle -%}
 
-{% block breadcrumb_content_selected %}{% endblock breadcrumb_content_selected %}
 {% block breadcrumb_content %}
   {{ super() }}
 {% endblock breadcrumb_content %}
 
-{% block pre_primary %}
-  {% asset "ontario_theme_scripts/ontario_theme_step_indicator" %}
+{% block pre_primary %}  
   {% set back_url = h.url_for(dataset.type ~ '_resource.edit', id=dataset.id, resource_id=resource.id) %}
   {% snippet "package/snippets/step_indicator.html", step=2, back_url=back_url %}
 {% endblock pre_primary %}
 
-{% block primary %}
-  <section class="ontario-column ontario-small-12 module module-validation">
-    <div class="module-content">
-      <div class="actions">
+{% block form_title %}
+  {{ h.resource_display_name(resource) | truncate(50) }}
+  {{ h.get_validation_badge(resource)|safe }}
+{% endblock form_title %}
 
-      </div>
+{# Temporary until edit_resource_base.html is modified #}
+{% block page_header %}{% endblock page_header%}
 
-      <h1 class="page-heading">{{ h.resource_display_name(resource) | truncate(50) }}
-      {{ h.get_validation_badge(resource)|safe }}
-      </h1>
-
-      <div class="validation-details">          
-          <div>{{ _('Validation timestamp') }}: {{ h.render_datetime(resource.validation_timestamp, with_hours=True) }}</div>
-          {% if validation.report %}
-          <div>{{ _('Duration') }}: {{ h.validation_dict(validation.report)["stats"]["seconds"] }}s</div>
-          {% endif %}
-      </div>
-
+{% block primary_content_inner %}
+  <div class="validation-details">          
+      <div>{{ _('Validation timestamp') }}: {{ h.render_datetime(resource.validation_timestamp, with_hours=True) }}</div>
       {% if validation.report %}
-          <div class="ontario-alert ontario-alert--success">
-            <div class="ontario-alert__header">
-                <div class="ontario-alert__header-icon">
-                    <svg class="ontario-icon" alt="" aria-hidden="true" focusable="false" sol:category="primary" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
-                        <use href="#ontario-icon-alert-success"></use>
-                    </svg>
-                </div>
-                <h2 class="ontario-alert__header-title ontario-h4">Data validated successfully</h2>
-            </div>
-        </div>
-        
+      <div>{{ _('Duration') }}: {{ h.validation_dict(validation.report)["stats"]["seconds"] }}s</div>
       {% endif %}
+  </div>
+  {% if validation.report %}
+      <div class="ontario-alert ontario-alert--success">
+        <div class="ontario-alert__header">
+            <div class="ontario-alert__header-icon">
+                <svg class="ontario-icon" alt="" aria-hidden="true" focusable="false" sol:category="primary" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
+                    <use href="#ontario-icon-alert-success"></use>
+                </svg>
+            </div>
+            <h2 class="ontario-alert__header-title ontario-h4">Data validated successfully</h2>
+        </div>
+    </div> 
+  {% endif %}
 
-    </div>
+  {% set package_id = resource.get('package_id') %}
+  {% set resource_id = resource.get('id') %}
+  {% set action = h.url_for('datastore.dictionary',
+            id=package_id,
+            resource_id=resource.id) %}
+  
+  <form method="get" action="{{ action }}" >
+    <button class="ontario-button ontario-button--primary" name="save" type="submit">Continue</button>
+  </form>
 
-    {% set package_id = resource.get('package_id') %}
-    {% set resource_id = resource.get('id') %}
-
-    {% set action = h.url_for('datastore.dictionary',
-              id=package_id,
-              resource_id=resource.id) %}
-    
-    <form method="get" action="{{ action }}" >
-      <button class="ontario-button ontario-button--primary" name="save" type="submit">Continue</button>
-    </form>
-  </section>
   {% if h.use_webassets() %}
       {% snippet 'validation/snippets/validation_asset.html', name='ckanext-validation/report-css' %}
       {% snippet 'validation/snippets/validation_asset.html', name='ckanext-validation/report-js' %}
   {% else %}
       {% snippet 'validation/snippets/validation_resource.html', name='ckanext-validation/report' %}
   {% endif %}
-{% endblock primary %}
-
-{% block secondary %}{% endblock secondary %}
+{% endblock primary_content_inner %}
