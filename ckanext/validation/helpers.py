@@ -58,9 +58,8 @@ def validation_extract_report_from_errors(errors):
                 source = report['tables'][0]['source']
                 report['tables'][0]['source'] = source.split('/')[-1]
             msg = _('''
-There are validation issues with this file, please see the
-<a {params}>report</a> for details. Once you have resolved the issues,
-click the button below to replace the file.''')
+                    There is a problem with your data source. Please review the 
+                    <a {params}>validation report</a> to resolve the issues and try uploading again.''')
             params = [
                 'href="#validation-report"',
                 'data-module="modal-dialog"',
