@@ -2,7 +2,7 @@
 import json
 
 from ckan.lib.helpers import url_for_static
-from ckantoolkit import url_for, _, config, asbool, literal, h
+from ckantoolkit import _, config, asbool, literal, h
 
 
 def get_validation_badge(resource, in_listing=False):
@@ -26,22 +26,14 @@ def get_validation_badge(resource, in_listing=False):
     else:
         status = 'unknown'
 
-    validation_url = url_for(
-        'validation_read',
-        id=resource['package_id'],
-        resource_id=resource['id'])
-
     badge_url = url_for_static(
         '/images/badges/data-{}-flat.svg'.format(status))
 
     return '''
-<a href="{validation_url}" class="validation-badge">
-    <img src="{badge_url}" alt="{alt}" title="{title}"/>
-</a>'''.format(
-        validation_url=validation_url,
-        badge_url=badge_url,
-        alt=messages[status],
-        title=resource.get('validation_timestamp', ''))
+        <img class="validation-badge" src="{badge_url}" alt="{alt}">
+        '''.format(
+            badge_url=badge_url,
+            alt=messages[status])
 
 
 def validation_extract_report_from_errors(errors):
