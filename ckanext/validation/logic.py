@@ -608,6 +608,8 @@ def resource_update(up_func, context, data_dict):
 
     upload.upload(id, uploader.get_max_resource_size())
 
+    resource = t.get_action('resource_show')(context, {'id': id})
+    
     # Custom code starts
 
     run_validation = True
@@ -624,14 +626,17 @@ def resource_update(up_func, context, data_dict):
             hasattr(upload, 'filename') and
             upload.filename is not None and
             isinstance(upload, uploader.ResourceUpload))
-        _run_sync_validation(
-            id, local_upload=is_local_upload, new_resource=False)
+        if resource['format'] == 'CSV':
+            _run_sync_validation(
+                id, local_upload=is_local_upload, new_resource=False)
+        else:
+            msg = 'Resource {} is not a CSV file. No validation performed'.format(
+                id)
+            log.info(msg)
 
     # Custom code ends
 
     model.repo.commit()
-
-    resource = t.get_action('resource_show')(context, {'id': id})
 
     if old_resource_format != resource['format']:
         t.get_action('resource_create_default_resource_views')(
