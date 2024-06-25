@@ -169,10 +169,8 @@ def _validate_table(source, _format='csv', schema=None, **options):
                           format=_format, 
                           schema=resource_schema,
                           checks=[header_rule_2_2_header_length(),
-                                  header_rule_2_3_snake_case(),
                                   header_rule_2_4_first_char(),
-                                  data_entry_rule_2_6_bullet_lists(),
-                                  data_entry_rule_4_7_bare_numbers()
+                                  data_entry_rule_2_6_bullet_lists()
                                  ])
         log.debug('Validating source: %s', source)
 
