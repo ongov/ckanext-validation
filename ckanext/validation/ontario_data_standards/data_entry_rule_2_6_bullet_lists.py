@@ -12,7 +12,7 @@ class data_entry_rule_2_6_bullet_lists(Check):
         for header in list(row):
             this_cell = row[header]
             if isinstance(this_cell, str):
-                list_chars = [u'•', u'* ', u'- ', u'â€”', u'\n',  u'\t'] # u'â€”' is em-dash
+                list_chars = [u'•', u'* ', u'â€”', u'\n',  u'\t'] # u'â€”' is em-dash. Excludes dash u'- '
                 bullet_check = [ele for ele in list_chars if(ele in this_cell.rstrip())] # strip any trailing spaces
                 if len(bullet_check) > 0:
                     note = 'Cell value cannot contain bullets, dashes, new line or tab characters. Please make separate rows.'
