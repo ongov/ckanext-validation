@@ -9,7 +9,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from frictionless import validate, system, Report, Schema, Dialect, Check, checks
 from ckanext.validation.ontario_data_standards.header_rule_2_2_header_length import header_rule_2_2_header_length
 from ckanext.validation.ontario_data_standards.header_rule_2_4_first_char import header_rule_2_4_first_char
-from ckanext.validation.ontario_data_standards.data_entry_rule_4_7_bare_numbers import data_entry_rule_4_7_bare_numbers
 
 from ckan.model import Session
 import ckan.lib.uploader as uploader
@@ -182,7 +181,6 @@ def _validate_table(source, _format='csv', schema=None, **options):
                           schema=resource_schema,
                           checks=[header_rule_2_2_header_length(),
                                   header_rule_2_4_first_char(),
-                                  data_entry_rule_4_7_bare_numbers(),
                                   checks.duplicate_row()
                                  ],
                           **options
