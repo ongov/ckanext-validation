@@ -8,11 +8,7 @@ import requests
 from sqlalchemy.orm.exc import NoResultFound
 from frictionless import validate, system, Report, Schema, Dialect, Check, checks
 from ckanext.validation.ontario_data_standards.header_rule_2_2_header_length import header_rule_2_2_header_length
-from ckanext.validation.ontario_data_standards.header_rule_2_3_snake_case import header_rule_2_3_snake_case
 from ckanext.validation.ontario_data_standards.header_rule_2_4_first_char import header_rule_2_4_first_char
-from ckanext.validation.ontario_data_standards.data_entry_rule_2_6_bullet_lists import data_entry_rule_2_6_bullet_lists
-from ckanext.validation.ontario_data_standards.data_entry_rule_4_7_bare_numbers import data_entry_rule_4_7_bare_numbers
-#from frictionless.errors.table import TableError
 
 from ckan.model import Session
 import ckan.lib.uploader as uploader
@@ -22,6 +18,8 @@ import ckantoolkit as t
 from ckanext.validation.model import Validation
 from ckanext.validation.utils import get_update_mode_from_config
 
+from ckan.logic import clean_dict, tuplize_dict, parse_params
+from ckan.lib.navl.dictization_functions import unflatten
 
 log = logging.getLogger(__name__)
 
@@ -43,10 +41,23 @@ def run_validation_job(resource):
     Session.add(validation)
     Session.commit()
 
+    # Get any validation options that many be specified in
+    # the default_validation_options of ckan.ini.
     options = t.config.get(
         'ckanext.validation.default_validation_options')
+    # Determine the current url
+    this_url = clean_dict(
+                unflatten(tuplize_dict(parse_params(t.request.form)))
+            )
     if options:
         options = json.loads(options)
+        if 'clear_upload' not in this_url:
+            # We are at Step 3 Data Dictionary page and must
+            # remove type-error checks from the 'skip_errors'
+            # list in the default_validation_options of ckan.ini,
+            # if present.
+            if 'skip_errors' in options:
+                options.pop('skip_errors')
     else:
         options = {}
 
@@ -170,9 +181,10 @@ def _validate_table(source, _format='csv', schema=None, **options):
                           schema=resource_schema,
                           checks=[header_rule_2_2_header_length(),
                                   header_rule_2_4_first_char(),
-                                  data_entry_rule_2_6_bullet_lists(),
                                   checks.duplicate_row()
-                                 ])
+                                 ],
+                          **options
+                         )
         log.debug('Validating source: %s', source)
 
     return report
