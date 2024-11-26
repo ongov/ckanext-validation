@@ -680,15 +680,8 @@ def _run_sync_validation(resource_id, local_upload=False, new_resource=True):
         report = json.loads(validation['report'])
 
         if not report['valid']:
-            # Delete validation object
-            t.get_action(u'resource_validation_delete')(
-                {u'ignore_auth': True},
-                {u'resource_id': resource_id}
-            )
-
-            # Delete uploaded file
-            if local_upload:
-                delete_local_uploaded_file(resource_id)
+            # Do not delete validation object
+            # Do not delete uploaded file
 
             if new_resource:
                 try:
