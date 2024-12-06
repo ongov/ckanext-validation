@@ -51,15 +51,15 @@ def run_validation_job(resource):
             )
     if options:
         options = json.loads(options)
-        if 'clear_upload' not in this_url:
-            # We are at Step 3 Data Dictionary page and must
-            # remove type-error checks from the 'skip_errors'
-            # list in the default_validation_options of ckan.ini,
-            # if present.
-            if 'skip_errors' in options:
-                options.pop('skip_errors')
     else:
         options = {}
+
+    # Check if on create new resoruce page
+    if this_url['save'] == 'go-dataset-step2':
+        # This is a new resource so skip type errors.
+        # All columns initially should be pushed to
+        # DataStore as text.
+        options = {"skip_errors": ['type-error']}
 
     resource_options = resource.get('validation_options')
     if resource_options and isinstance(resource_options, str):
