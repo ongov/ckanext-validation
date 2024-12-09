@@ -25,9 +25,9 @@ def get_validation_badge(resource, in_listing=False):
         status = resource['validation_status']
     else:
         status = 'unknown'
-
-    badge_url = url_for_static(
-        '/images/badges/data-{}-flat.svg'.format(status))
+    
+    badge_url=url_for_static('/images/badges/{lang}/data-{status}-flat.svg'
+                                 .format(lang=h.lang(), status=status))
 
     return '''
         <img class="validation-badge" src="{badge_url}" alt="{alt}">
