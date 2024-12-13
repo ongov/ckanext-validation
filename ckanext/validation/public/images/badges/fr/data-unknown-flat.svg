@@ -1,0 +1,20 @@
+<svg width="104.2" height="20" viewBox="0 0 1042 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="donnée: inconnu">
+  <title>donnée: inconnu</title>
+  <linearGradient id="a" x2="0" y2="100%">
+    <stop offset="0" stop-opacity=".1" stop-color="#EEE"/>
+    <stop offset="1" stop-opacity=".1"/>
+  </linearGradient>
+  <mask id="m"><rect width="1042" height="200" rx="30" fill="#FFF"/></mask>
+  <g mask="url(#m)">
+    <rect width="508" height="200" fill="#555"/>
+    <rect width="534" height="200" fill="#999" x="508"/>
+    <rect width="1042" height="200" fill="url(#a)"/>
+  </g>
+  <g aria-hidden="true" fill="#fff" text-anchor="start" font-family="Verdana,DejaVu Sans,sans-serif" font-size="110">
+    <text x="60" y="148" textLength="408" fill="#000" opacity="0.25">donnée</text>
+    <text x="50" y="138" textLength="408">donnée</text>
+    <text x="563" y="148" textLength="434" fill="#000" opacity="0.25">inconnu</text>
+    <text x="553" y="138" textLength="434">inconnu</text>
+  </g>
+  
+</svg>
