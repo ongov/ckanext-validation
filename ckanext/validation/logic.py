@@ -626,7 +626,7 @@ def resource_update(up_func, context, data_dict):
             hasattr(upload, 'filename') and
             upload.filename is not None and
             isinstance(upload, uploader.ResourceUpload))
-        if resource['format'] == 'CSV':
+        if resource['format'] == 'CSV' and resource['datastore_active']:
             _run_sync_validation(
                 id, local_upload=is_local_upload, new_resource=False)
         else:
